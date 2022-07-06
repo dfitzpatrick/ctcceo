@@ -8,6 +8,7 @@ import logging
 log = logging.getLogger(__name__)
 APP_COMMANDS_GUILDS = (
     discord.Object(id=734183623707721874),
+    discord.Object(id=911755182889648128),
 )
 
 
