@@ -46,6 +46,7 @@ class SubscriberCog(ConfigMixin, commands.GroupCog, name='subscriber-display'):
 
     def provider_factory(self, member: discord.Member, name: str):
         return self.provider_cog.find_provider_instance_by_member_and_name(member, name)
+
     def start_services(self):
         for guild_str in self.config_settings.keys():
             guild = self.bot.get_guild(int(guild_str))
@@ -56,7 +57,7 @@ class SubscriberCog(ConfigMixin, commands.GroupCog, name='subscriber-display'):
                 if member is None:
                     continue
                 provider_names = self.config_settings[guild_str][member_str]['provider_settings'].keys()
-                for name in list(provider_names)[:2]:
+                for name in list(provider_names):
                     interval = string_timedelta(self.config_settings[guild_str][member_str]['provider_settings'][name]['interval'])
                     provider = self.provider_cog.find_provider_instance_by_member_and_name(member, name)
                     factory = partial(self.provider_factory, member=member, name=name)
