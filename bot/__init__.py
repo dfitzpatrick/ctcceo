@@ -4,6 +4,15 @@ import logging
 import os
 import sys
 from logging import StreamHandler, FileHandler
+import sentry_sdk
+sentry_sdk.init(
+    dsn="https://6e802b09c5ef4ebbb1cdc1673066e6e9@o391198.ingest.sentry.io/6556670",
+
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production.
+    traces_sample_rate=1.0
+)
 
 BASE_DIR = os.path.normpath(os.path.dirname(os.path.realpath(__file__)))
 handler_console = StreamHandler(stream=sys.stdout)

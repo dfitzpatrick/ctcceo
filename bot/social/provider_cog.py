@@ -41,9 +41,9 @@ class ProviderConfig:
 class ProviderTaskService:
     interval = timedelta(minutes=5)
 
-    def __init__(self, name: str, provider: Provider, callback: Callable, interval: Optional[timedelta] = None):
+    def __init__(self, name: str, factory: Callable, callback: Callable, interval: Optional[timedelta] = None):
         self.name = name
-        self.provider = provider
+        self.factory = factory
         self.callback = callback
         self.task: Optional[asyncio.Task] = None
         if interval is not None:
@@ -53,13 +53,13 @@ class ProviderTaskService:
     @tasks.loop(seconds=interval.total_seconds(), reconnect=True)
     async def provider_task(self):
         log.debug(f"In task for {self.name}. Calling callback")
-        await self.callback(self.name, self.provider)
+        await self.callback(self.name, self.factory())
 
     def start(self):
-        name = self.provider.__repr__()
+        name = self.factory().__repr__()
         log.debug(f"Starting {name} Task Service with interval {self.interval.total_seconds()}")
         self.task = self.provider_task.start()
-        task_finished = partial(self._task_finished, provider=self.provider)
+        task_finished = partial(self._task_finished, provider=self.factory())
         self.task.add_done_callback(task_finished)
         return self.task
 

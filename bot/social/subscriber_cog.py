@@ -1,6 +1,7 @@
 import asyncio
 from copy import copy
 from datetime import datetime, timezone, timedelta
+from functools import partial
 from typing import Optional, Callable, Any, Dict, List
 
 import discord
@@ -43,7 +44,8 @@ class SubscriberCog(ConfigMixin, commands.GroupCog, name='subscriber-display'):
             if t == task:
                 return key
 
-
+    def provider_factory(self, member: discord.Member, name: str):
+        return self.provider_cog.find_provider_instance_by_member_and_name(member, name)
     def start_services(self):
         for guild_str in self.config_settings.keys():
             guild = self.bot.get_guild(int(guild_str))
@@ -57,21 +59,21 @@ class SubscriberCog(ConfigMixin, commands.GroupCog, name='subscriber-display'):
                 for name in list(provider_names)[:2]:
                     interval = string_timedelta(self.config_settings[guild_str][member_str]['provider_settings'][name]['interval'])
                     provider = self.provider_cog.find_provider_instance_by_member_and_name(member, name)
+                    factory = partial(self.provider_factory, member=member, name=name)
                     if provider is not None:
-                        self.start_provider_service(guild_str, member_str, name, provider, interval)
+                        self.start_provider_service(guild_str, member_str, name, factory, interval)
 
-    def start_provider_service(self, guild_id: str, member_id: str, name: str, provider: Provider, interval: timedelta):
+    def start_provider_service(self, guild_id: str, member_id: str, name: str, factory: Callable, interval: timedelta):
         composite_key = f"{guild_id}{member_id}{name}"
         if composite_key in self.tasks:
             task = self.tasks[composite_key]
             if task is not None:
                 log.debug("Cancelling Task")
-                task.cancel(msg="Restarting task")
-        pts = ProviderTaskService(name, provider, self.task_callback, interval)
+                task.cancel()
+        pts = ProviderTaskService(name, factory, self.task_callback, interval)
         task = pts.start()
         self.tasks[composite_key] = task
         log.debug(f"Provider Service Task started for {member_id}")
-
 
 
     def establish_config(self, guild_id: str, member_id: str):
