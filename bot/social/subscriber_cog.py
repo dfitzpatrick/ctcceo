@@ -125,6 +125,7 @@ class SubscriberCog(ConfigMixin, commands.GroupCog, name='subscriber-display'):
                 message = await channel.send(embed=embed)
                 new_message = True
         except discord.NotFound:
+            log.info(f"Discord unable to locate message {message_id}")
             message = await channel.send(embed=embed)
             new_message = True
         except discord.Forbidden as e:
@@ -141,6 +142,7 @@ class SubscriberCog(ConfigMixin, commands.GroupCog, name='subscriber-display'):
             for member_str in self.config_settings[guild_str].keys():
                 member = guild.get_member(int(member_str))
                 if member is None:
+                    log.debug(f"Member {member_str} does not exist in Guild {guild_str}")
                     continue
                 log.debug(f"Found member {member}")
                 settings = self.config_settings[guild_str][member_str]['provider_settings'].get(provider_name)
@@ -154,6 +156,8 @@ class SubscriberCog(ConfigMixin, commands.GroupCog, name='subscriber-display'):
                             self.save_settings()
                     except KeyError as e:
                         log.error(f"KeyError on subscription settings: {settings}: {e}")
+                else:
+                    log.warning(f"Could not find settings for {provider_name} Guild: {guild_str} Member: {member_str}")
         log.debug("Task callback finished")
 
     async def modal_callback(self, itx: Interaction, provider_name: str, payload: Dict[str, Any]):
