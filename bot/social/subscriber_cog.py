@@ -185,8 +185,7 @@ class SubscriberCog(ConfigMixin, commands.GroupCog, name='subscriber-display'):
         self.save_settings()
         provider = self.provider_cog.find_provider_instance_by_member_and_name(itx.user, provider_name)
         if provider is not None:
-
-            self.start_provider_service(guild_str, member_str, provider_name, provider, interval)
+            self.start_provider_service(guild_str, member_str, provider_name, self.provider_factory, interval)
         else:
             log.error(f"Could not start provider service {provider_name} for {itx.user.name} in {itx.guild.name}")
         await itx.followup.send(f"Settings for {provider_name} saved.", ephemeral=True)
