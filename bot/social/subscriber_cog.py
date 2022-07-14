@@ -1,23 +1,21 @@
 import asyncio
-from copy import copy
+import logging
 from datetime import datetime, timezone, timedelta
 from functools import partial
 from typing import Optional, Callable, Any, Dict, List
 
 import discord
-from discord.ext import commands
 from discord import app_commands, Interaction, ui
+from discord.ext import commands
 
 from bot.social.provider_cog import ProviderCog, Provider, ProviderTaskService
-import logging
-
 from mixins.config import ConfigMixin
 from services import establish_member_config, string_timedelta
 
 log = logging.getLogger(__name__)
 
+
 class SubscriberCog(ConfigMixin, commands.GroupCog, name='subscriber-display'):
-    autocomplete_func = None
 
     def __init__(self, bot: commands.Bot, provider_cog: ProviderCog):
         self.bot = bot
@@ -31,7 +29,6 @@ class SubscriberCog(ConfigMixin, commands.GroupCog, name='subscriber-display'):
 
         super(SubscriberCog, self).__init__()
         self.first_run = True
-        #self.start_services()
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -185,7 +182,8 @@ class SubscriberCog(ConfigMixin, commands.GroupCog, name='subscriber-display'):
         self.save_settings()
         provider = self.provider_cog.find_provider_instance_by_member_and_name(itx.user, provider_name)
         if provider is not None:
-            self.start_provider_service(guild_str, member_str, provider_name, self.provider_factory, interval)
+            factory = partial(self.provider_factory, member=itx.user, name=provider_name)
+            self.start_provider_service(guild_str, member_str, provider_name, factory, interval)
         else:
             log.error(f"Could not start provider service {provider_name} for {itx.user.name} in {itx.guild.name}")
         await itx.followup.send(f"Settings for {provider_name} saved.", ephemeral=True)
